@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Solicitudes - SIKANUSGG</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .login-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .login-box .form-group {
+            margin-bottom: 20px;
+        }
+
+        .login-box label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .login-box button:hover {
+            transform: translateY(-2px);
+        }
+
+        .panel-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .panel-container.active {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar-menu button {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.3s;
+        }
+
+        .sidebar-menu button:hover,
+        .sidebar-menu button.active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .logout-btn {
+            width: 100%;
+            margin-top: 20px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #ff5252;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .responses-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .responses-section h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .filter-search {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-search input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .filter-search button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table thead {
+            background: #f9f9f9;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        table th {
+            padding: 15px;
+            text-align: left;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-nuevo {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-leido {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .actions-btn {
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+
+        .actions-btn:hover {
+            background: #764ba2;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-body p {
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        .modal-body strong {
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-footer button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #764ba2;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff5252;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 2000;
+            display: none;
+        }
+
+        .toast.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginScreen">
+        <div class="login-box">
+            <h2>Panel de Solicitudes</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit">Iniciar Sesión</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Panel Screen -->
+    <div class="panel-container" id="panelScreen">
+        <div class="sidebar">
+            <h3>SIKANUSGG</h3>
+            <ul class="sidebar-menu">
+                <li><button class="menu-btn active" data-section="dashboard">Dashboard</button></li>
+                <li><button class="menu-btn" data-section="respuestas">Solicitudes</button></li>
+            </ul>
+            <button class="logout-btn">Cerrar Sesión</button>
+        </div>
+
+        <div class="main-content">
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="section active">
+                <h2>Dashboard</h2>
+                <div class="stats">
+                    <div class="stat-card">
+                        <h4>Total Solicitudes</h4>
+                        <div class="number" id="totalSolicitudes">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Nuevas Hoy</h4>
+                        <div class="number" id="nuevasHoy">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Sin Leer</h4>
+                        <div class="number" id="sinLeer">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Respuestas Section -->
+            <div id="respuestas" class="section" style="display: none;">
+                <div class="responses-section">
+                    <h3>Todas las Solicitudes</h3>
+                    <div class="filter-search">
+                        <input type="text" id="searchInput" placeholder="Buscar por nombre o email...">
+                        <button onclick="exportCSV()">Exportar CSV</button>
+                        <button onclick="clearAllData()" style="background: #ff6b6b;">Limpiar Todo</button>
+                    </div>
+                    <div class="table-container">
+                        <div id="loadingMessage" class="loading">Cargando solicitudes...</div>
+                        <table id="responsesTable" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th>Nombre Juego</th>
+                                    <th>ID Cuenta</th>
+                                    <th>Edad</th>
+                                    <th>Carros Clean</th>
+                                    <th>Tiempo Jugando</th>
+                                    <th>Game Guardian</th>
+                                    <th>Redes Sociales</th>
+                                    <th>Motivo Unión</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="responsesBody">
+                            </tbody>
+                        </table>
+                        <div id="emptyState" class="empty-state" style="display: none;">
+                            <p>No hay solicitudes aún</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para detalles -->
+    <div class="modal" id="detailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detalles de Solicitud</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">Cerrar</button>
+                <button class="btn-danger" onclick="deleteResponse()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Configuración de Supabase
+        const SUPABASE_URL = 'https://cazmakmritkxojvkgwli.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_QYeNI7-pbOHgv9TIgYf_aA_57SPm05Y';
+        const TABLE_NAME = 'solicitudes';
+
+        // Variables globales
+        let currentUser = null;
+        let allResponses = [];
+        let currentModalId = null;
+
+        // Verificar si el usuario está logueado
+        function checkAuth() {
+            const user = localStorage.getItem('user');
+            if (user) {
+                currentUser = JSON.parse(user);
+                showPanel();
+                loadResponses();
+            } else {
+                showLogin();
+            }
+        }
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Validación simple (en producción usar autenticación real)
+            if (email && password) {
+                currentUser = { email, password: sha256(password) };
+                localStorage.setItem('user', JSON.stringify(currentUser));
+                showPanel();
+                loadResponses();
+                showToast('Sesión iniciada correctamente');
+            }
+        });
+
+        // Mostrar pantalla de login
+        function showLogin() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('panelScreen').classList.remove('active');
+        }
+
+        // Mostrar panel
+        function showPanel() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('panelScreen').classList.add('active');
+        }
+
+        // Logout
+        document.querySelector('.logout-btn').addEventListener('click', function() {
+            localStorage.removeItem('user');
+            currentUser = null;
+            showLogin();
+            showToast('Sesión cerrada');
+        });
+
+        // Menu navigation
+        document.querySelectorAll('.menu-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+                
+                this.classList.add('active');
+                const section = this.dataset.section;
+                document.getElementById(section).style.display = 'block';
+                
+                if (section === 'respuestas') {
+                    loadResponses();
+                }
+            });
+        });
+
+        // Cargar respuestas desde Supabase
+        async function loadResponses() {
+            try {
+                document.getElementById('loadingMessage').style.display = 'block';
+                document.getElementById('responsesTable').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'none';
+
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/${TABLE_NAME}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    }
+                );
+
+                if (response.ok) {
+                    allResponses = await response.json();
+                    renderResponses(allResponses);
+                    updateStats();
+                } else {
+                    console.error('Error cargando respuestas:', response.statusText);
+                    document.getElementById('loadingMessage').innerHTML = 'Error al cargar los datos';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loadingMessage').innerHTML = 'Error de conexión con Supabase';
+            }
+        }
+
+        // Renderizar respuestas en la tabla
+        function renderResponses(responses) {
+            const tbody = document.getElementById('responsesBody');
+            tbody.innerHTML = '';
+
+            if (responses.length === 0) {
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('responsesTable').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                return;
+            }
+
+            responses.forEach(response => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${response.nombre_juego || '-'}</td>
+                    <td>${response.id_cuenta || '-'}</td>
+                    <td>${response.edad || '-'}</td>
+                    <td>${response.carros_clean || '-'}</td>
+                    <td>${response.tiempo_jugando || '-'}</td>
+                    <td>${response.usa_game_guardian === true ? 'Sí' : 'No'}</td>
+                    <td>${response.redes_sociales || '-'}</td>
+                    <td>${response.motivo_union || '-'}</td>
+                    <td>
+                        <button class="actions-btn" onclick="viewDetails(${response.id})">Ver</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('responsesTable').style.display = 'table';
+        }
+
+        // Ver detalles
+        function viewDetails(id) {
+            const response = allResponses.find(r => r.id === id);
+            if (response) {
+                currentModalId = id;
+                const modalBody = document.getElementById('modalBody');
+                modalBody.innerHTML = `
+                    <p><strong>Nombre Juego:</strong> ${response.nombre_juego || '-'}</p>
+                    <p><strong>ID Cuenta:</strong> ${response.id_cuenta || '-'}</p>
+                    <p><strong>Edad:</strong> ${response.edad || '-'}</p>
+                    <p><strong>Carros Clean:</strong> ${response.carros_clean || '-'}</p>
+                    <p><strong>Tiempo Jugando:</strong> ${response.tiempo_jugando || '-'}</p>
+                    <p><strong>Usa Game Guardian:</strong> ${response.usa_game_guardian === true ? 'Sí' : 'No'}</p>
+                    <p><strong>Redes Sociales:</strong> ${response.redes_sociales || '-'}</p>
+                    <p><strong>Motivo Unión:</strong> ${response.motivo_union || '-'}</p>
+                    <p><strong>Fecha Registro:</strong> ${new Date(response.created_at).toLocaleString('es-ES')}</p>
+                `;
+                document.getElementById('detailsModal').classList.add('active');
+            }
+        }
+
+        // Cerrar modal
+        function closeModal() {
+            document.getElementById('detailsModal').classList.remove('active');
+            currentModalId = null;
+        }
+
+        // Eliminar respuesta
+        async function deleteResponse() {
+            if (!currentModalId) return;
+
+            try {
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?id=eq.${currentModalId}`,
+                    {
+                        method: 'DELETE',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    }
+                );
+
+                if (response.ok) {
+                    closeModal();
+                    loadResponses();
+                    showToast('Solicitud eliminada');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error al eliminar');
+            }
+        }
+
+        // Actualizar estadísticas
+        function updateStats() {
+            document.getElementById('totalSolicitudes').textContent = allResponses.length;
+            
+            const hoy = new Date().toDateString();
+            const nuevasHoy = allResponses.filter(r => new Date(r.created_at).toDateString() === hoy).length;
+            document.getElementById('nuevasHoy').textContent = nuevasHoy;
+            document.getElementById('sinLeer').textContent = 0; // Supabase no tiene campo de lectura
+        }
+
+        // Exportar CSV
+        function exportCSV() {
+            if (allResponses.length === 0) {
+                showToast('No hay datos para exportar');
+                return;
+            }
+
+            let csv = 'Nombre Juego,ID Cuenta,Edad,Carros Clean,Tiempo Jugando,Game Guardian,Redes Sociales,Motivo Unión,Fecha\n';
+            allResponses.forEach(r => {
+                csv += `"${r.nombre_juego}","${r.id_cuenta}","${r.edad}","${r.carros_clean}","${r.tiempo_jugando}","${r.usa_game_guardian}","${r.redes_sociales}","${r.motivo_union}","${new Date(r.created_at).toLocaleString('es-ES')}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'solicitudes.csv';
+            a.click();
+            showToast('Archivo descargado');
+        }
+
+        // Limpiar todo
+        function clearAllData() {
+            if (confirm('¿Estás seguro de que deseas eliminar TODAS las solicitudes?')) {
+                allResponses.forEach(r => {
+                    fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}?id=eq.${r.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    });
+                });
+                loadResponses();
+                showToast('Todas las solicitudes han sido eliminadas');
+            }
+        }
+
+        // Búsqueda
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const term = this.value.toLowerCase();
+            const filtered = allResponses.filter(r => 
+                (r.nombre_juego && r.nombre_juego.toLowerCase().includes(term)) ||
+                (r.id_cuenta && r.id_cuenta.toLowerCase().includes(term))
+            );
+            renderResponses(filtered);
+        });
+
+        // Toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Escuchar cambios en Supabase en tiempo real
+        function subscribeToChanges() {
+            setInterval(() => {
+                loadResponses();
+            }, 5000); // Actualizar cada 5 segundos
+        }
+
+        // Iniciar
+        checkAuth();
+        subscribeToChanges();
+
+        // Cerrar modal al presionar ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>
